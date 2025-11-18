@@ -1,0 +1,18 @@
+{
+    "sourceFile": "entrypoint.sh ",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763446074591,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763446074591,
+            "name": "Commit-0",
+            "content": "#!/bin/bash\n\n# Set default port if not provided\nexport PORT=${PORT:-5000}\n\necho \"Starting application on port $PORT...\"\n\n# Start gunicorn\nexec gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app"
+        }
+    ]
+}

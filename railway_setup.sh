@@ -1,3 +1,6 @@
+#!/bin/bash
+# Railway build script
+
 echo "Setting up Python virtual environment..."
 python -m venv venv
 source venv/bin/activate

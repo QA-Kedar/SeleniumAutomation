@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1763444936812,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1763445579050,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,7 @@\n+#!/bin/bash\n+# Railway build script\n+\n echo \"Setting up Python virtual environment...\"\n python -m venv venv\n source venv/bin/activate\n \n"
                 }
             ],
             "date": 1763444936812,

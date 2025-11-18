@@ -66,6 +66,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application files
 COPY . .
 
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
 # Create necessary directories
 RUN mkdir -p templates
 
@@ -77,5 +80,5 @@ ENV CHROMEDRIVER_PATH=/usr/local/bin/chromedriver
 # Expose port
 EXPOSE 5000
 
-# Start command
-CMD gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app
+# Start command - use shell form to allow environment variable expansion
+CMD ["sh", "-c", "gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:${PORT:-5000} app:app"]
