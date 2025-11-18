@@ -3,11 +3,19 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 2,
             "patches": [
                 {
                     "date": 1763444618088,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1763444850820,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,2 @@\n [phases.setup]\n-nixPkgs = [\"python312\", \"python312Packages.pip\"]\n-\n-[phases.install]\n-cmds = [\"pip install -r requirements.txt\"]\n-\n-[phases.start]\n-cmd = \"gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app\"\n+nixPkgs = [\"python311\", \"chromium\", \"chromedriver\"]\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1763444867162,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,2 +1,19 @@\n [phases.setup]\n-nixPkgs = [\"python311\", \"chromium\", \"chromedriver\"]\n\\ No newline at end of file\n+nixPkgs = [\"python311\", \"chromium\", \"chromedriver\"]\n+\n+[phases.install]\n+cmds = [\n+  \"python -m venv /opt/venv\",\n+  \". /opt/venv/bin/activate && pip install --upgrade pip\",\n+  \". /opt/venv/bin/activate && pip install -r requirements.txt\"\n+]\n+\n+[phases.build]\n+cmds = [\"echo 'Build phase completed'\"]\n+\n+[start]\n+cmd = \". /opt/venv/bin/activate && gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app\"\n+\n+[variables]\n+PYTHONUNBUFFERED = \"1\"\n+PATH = \"/opt/venv/bin:$PATH\"\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1763444618088,

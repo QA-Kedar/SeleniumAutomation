@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1763444635831,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1763444967230,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,8 +5,10 @@\n from selenium.webdriver.support.ui import WebDriverWait\n from selenium.webdriver.support import expected_conditions as EC\n import time\n import requests\n+import os\n+import glob\n \n # List of URLs to test\n URLS = [\n     \"https://reddensoft.com/blog\",\n@@ -66,18 +68,34 @@\n @pytest.fixture(scope=\"session\")\n def driver():\n     \"\"\"Setup Chrome driver with headless options\"\"\"\n     chrome_options = Options()\n-    chrome_options.add_argument(\"--headless\")\n+    chrome_options.add_argument(\"--headless=new\")\n     chrome_options.add_argument(\"--no-sandbox\")\n     chrome_options.add_argument(\"--disable-dev-shm-usage\")\n     chrome_options.add_argument(\"--disable-gpu\")\n     chrome_options.add_argument(\"--window-size=1920,1080\")\n     chrome_options.add_argument(\"--disable-blink-features=AutomationControlled\")\n+    chrome_options.add_argument(\"--disable-extensions\")\n+    chrome_options.add_argument(\"--disable-setuid-sandbox\")\n+    chrome_options.add_argument(\"--remote-debugging-port=9222\")\n     chrome_options.add_experimental_option(\"excludeSwitches\", [\"enable-automation\"])\n     chrome_options.add_experimental_option('useAutomationExtension', False)\n     \n-    driver = webdriver.Chrome(options=chrome_options)\n+    # For Railway deployment - use system Chrome\n+    chrome_options.binary_location = \"/nix/store/*-chromium-*/bin/chromium\" if os.path.exists(\"/nix/store\") else None\n+    \n+    try:\n+        driver = webdriver.Chrome(options=chrome_options)\n+    except Exception as e:\n+        print(f\"[ERROR] Failed to initialize Chrome driver: {str(e)}\")\n+        # Fallback to basic options\n+        chrome_options = Options()\n+        chrome_options.add_argument(\"--headless=new\")\n+        chrome_options.add_argument(\"--no-sandbox\")\n+        chrome_options.add_argument(\"--disable-dev-shm-usage\")\n+        driver = webdriver.Chrome(options=chrome_options)\n+    \n     driver.set_page_load_timeout(30)\n     \n     yield driver\n     \n"
                 }
             ],
             "date": 1763444635831,

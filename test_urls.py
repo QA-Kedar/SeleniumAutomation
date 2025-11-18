@@ -6,6 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import requests
+import os
+import glob
 
 # List of URLs to test
 URLS = [
@@ -67,16 +69,32 @@ URLS = [
 def driver():
     """Setup Chrome driver with headless options"""
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-setuid-sandbox")
+    chrome_options.add_argument("--remote-debugging-port=9222")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
-    driver = webdriver.Chrome(options=chrome_options)
+    # For Railway deployment - use system Chrome
+    chrome_options.binary_location = "/nix/store/*-chromium-*/bin/chromium" if os.path.exists("/nix/store") else None
+    
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+    except Exception as e:
+        print(f"[ERROR] Failed to initialize Chrome driver: {str(e)}")
+        # Fallback to basic options
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        driver = webdriver.Chrome(options=chrome_options)
+    
     driver.set_page_load_timeout(30)
     
     yield driver

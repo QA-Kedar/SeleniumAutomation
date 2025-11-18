@@ -1,0 +1,18 @@
+{
+    "sourceFile": "railway_setup.sh",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763444936812,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763444936812,
+            "name": "Commit-0",
+            "content": "echo \"Setting up Python virtual environment...\"\npython -m venv venv\nsource venv/bin/activate\n\necho \"Upgrading pip...\"\npip install --upgrade pip\n\necho \"Installing dependencies...\"\npip install -r requirements.txt\n\necho \"Setup completed successfully!\""
+        }
+    ]
+}
