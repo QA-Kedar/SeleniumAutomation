@@ -1,0 +1,18 @@
+{
+    "sourceFile": "pytest.ini",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763444195900,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763444195900,
+            "name": "Commit-0",
+            "content": "[pytest]\naddopts = -v --tb=short --color=yes\ntestpaths = .\npython_files = test_*.py\npython_classes = Test*\npython_functions = test_*"
+        }
+    ]
+}
