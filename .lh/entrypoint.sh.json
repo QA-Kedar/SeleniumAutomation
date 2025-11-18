@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1763446088282,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1763446576366,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,20 @@\n #!/bin/bash\n+set -e\n \n+# Debug: Show environment variables\n+echo \"Environment variables:\"\n+env | grep PORT || echo \"PORT not set\"\n+\n # Set default port if not provided\n-export PORT=${PORT:-5000}\n\\ No newline at end of file\n+if [ -z \"$PORT\" ]; then\n+    export PORT=5000\n+    echo \"PORT was not set, using default: 5000\"\n+else\n+    echo \"PORT is set to: $PORT\"\n+fi\n \n echo \"Starting application on port $PORT...\"\n \n # Start gunicorn\n-exec gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT app:app\n+exec gunicorn --worker-class eventlet -w 1 --bind \"0.0.0.0:${PORT}\" app:app\n+EOF\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1763446088282,

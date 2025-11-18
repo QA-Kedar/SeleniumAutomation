@@ -351,7 +351,13 @@
     </div>
 
     <script>
-        const socket = io();
+        const socket = io({
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
+        });
+        
         const startBtn = document.getElementById('startBtn');
         const stopBtn = document.getElementById('stopBtn');
         const clearBtn = document.getElementById('clearBtn');
@@ -365,6 +371,18 @@
 
         socket.on('connect', () => {
             addLog('Connected to server', 'success');
+        });
+
+        socket.on('disconnect', () => {
+            addLog('Disconnected from server', 'warning');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.log('Connection error:', error);
+        });
+
+        socket.on('reconnect', (attemptNumber) => {
+            addLog('Reconnected to server', 'success');
         });
 
         socket.on('log', (data) => {

@@ -3,11 +3,15 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 0,
+            "activePatchIndex": 1,
             "patches": [
                 {
                     "date": 1763444994190,
                     "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1763464236544,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -350,9 +350,15 @@\n         </div>\n     </div>\n \n     <script>\n-        const socket = io();\n+        const socket = io({\n+            reconnection: true,\n+            reconnectionDelay: 1000,\n+            reconnectionDelayMax: 5000,\n+            reconnectionAttempts: 5\n+        });\n+        \n         const startBtn = document.getElementById('startBtn');\n         const stopBtn = document.getElementById('stopBtn');\n         const clearBtn = document.getElementById('clearBtn');\n         const statusBadge = document.getElementById('statusBadge');\n@@ -366,8 +372,20 @@\n         socket.on('connect', () => {\n             addLog('Connected to server', 'success');\n         });\n \n+        socket.on('disconnect', () => {\n+            addLog('Disconnected from server', 'warning');\n+        });\n+\n+        socket.on('connect_error', (error) => {\n+            console.log('Connection error:', error);\n+        });\n+\n+        socket.on('reconnect', (attemptNumber) => {\n+            addLog('Reconnected to server', 'success');\n+        });\n+\n         socket.on('log', (data) => {\n             addLog(data.message, data.type, data.timestamp);\n             \n             // Update counters based on log message\n"
                 }
             ],
             "date": 1763444994190,

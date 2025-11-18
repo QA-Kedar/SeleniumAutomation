@@ -1,14 +1,32 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, disconnect
 import threading
 import subprocess
 import os
 from datetime import datetime
 import json
+import logging
+
+# Configure logging to suppress socket errors
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+# Suppress eventlet warnings
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
-socketio = SocketIO(app, cors_allowed_origins="*")
+
+# Configure SocketIO with proper settings
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*",
+    logger=False,
+    engineio_logger=False,
+    ping_timeout=60,
+    ping_interval=25
+)
 
 # Global variables
 test_process = None
@@ -69,12 +87,16 @@ def handle_start_tests():
             
             # Stream output
             for line in iter(test_process.stdout.readline, ''):
-                if line:
-                    socketio.emit('log', {
-                        'message': line.strip(),
-                        'type': 'info',
-                        'timestamp': datetime.now().strftime('%H:%M:%S')
-                    })
+                if line and test_running:
+                    try:
+                        socketio.emit('log', {
+                            'message': line.strip(),
+                            'type': 'info',
+                            'timestamp': datetime.now().strftime('%H:%M:%S')
+                        })
+                    except Exception as e:
+                        # Client disconnected, continue anyway
+                        pass
             
             test_process.wait()
             
@@ -116,6 +138,16 @@ def handle_connect():
     if not session.get('logged_in'):
         return False
     emit('log', {'message': '[INFO] Connected to server', 'type': 'success'})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnect gracefully"""
+    pass
+
+@socketio.on_error_default
+def default_error_handler(e):
+    """Handle all socket errors gracefully"""
+    pass
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
