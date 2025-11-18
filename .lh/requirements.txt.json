@@ -1,0 +1,18 @@
+{
+    "sourceFile": "requirements.txt",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1763444631617,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1763444631617,
+            "name": "Commit-0",
+            "content": "flask==3.0.0\nflask-socketio==5.3.5\npython-socketio==5.10.0\nselenium==4.15.2\npytest==7.4.3\nrequests==2.31.0\nwebdriver-manager==4.0.1\ngunicorn==21.2.0\neventlet==0.33.3"
+        }
+    ]
+}
