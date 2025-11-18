@@ -7,7 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 import requests
 import os
-import glob
 
 # List of URLs to test
 URLS = [
@@ -67,39 +66,62 @@ URLS = [
 
 @pytest.fixture(scope="session")
 def driver():
-    """Setup Chrome driver with headless options"""
+    """Setup Chrome driver with headless options - Railway/Docker compatible"""
     chrome_options = Options()
+    
+    # Essential headless options
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-software-rasterizer")
     chrome_options.add_argument("--window-size=1920,1080")
+    
+    # Additional stability options
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--disable-setuid-sandbox")
     chrome_options.add_argument("--remote-debugging-port=9222")
+    chrome_options.add_argument("--disable-web-security")
+    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+    chrome_options.add_argument("--single-process")
+    
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
-    # For Railway deployment - use system Chrome
-    chrome_options.binary_location = "/nix/store/*-chromium-*/bin/chromium" if os.path.exists("/nix/store") else None
+    # Set Chrome binary location if provided
+    chrome_bin = os.environ.get('CHROME_BIN', '/usr/bin/google-chrome')
+    if os.path.exists(chrome_bin):
+        chrome_options.binary_location = chrome_bin
+        print(f"[INFO] Using Chrome binary: {chrome_bin}")
+    
+    # Set ChromeDriver path if provided
+    chromedriver_path = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
     
     try:
-        driver = webdriver.Chrome(options=chrome_options)
+        if os.path.exists(chromedriver_path):
+            service = Service(executable_path=chromedriver_path)
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            print(f"[INFO] Using ChromeDriver: {chromedriver_path}")
+        else:
+            # Fallback to default
+            driver = webdriver.Chrome(options=chrome_options)
+            print("[INFO] Using default ChromeDriver")
+        
+        driver.set_page_load_timeout(30)
+        print("[SUCCESS] Chrome driver initialized successfully")
+        
     except Exception as e:
         print(f"[ERROR] Failed to initialize Chrome driver: {str(e)}")
-        # Fallback to basic options
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Chrome(options=chrome_options)
-    
-    driver.set_page_load_timeout(30)
+        raise
     
     yield driver
     
-    driver.quit()
+    try:
+        driver.quit()
+        print("[INFO] Chrome driver closed successfully")
+    except:
+        pass
 
 @pytest.mark.parametrize("url", URLS)
 def test_url_status_and_load(driver, url):
