@@ -371,6 +371,8 @@
 
         socket.on('connect', () => {
             addLog('Connected to server', 'success');
+            // Request buffered logs when connecting
+            socket.emit('get_buffered_logs');
         });
 
         socket.on('disconnect', () => {
@@ -383,6 +385,14 @@
 
         socket.on('reconnect', (attemptNumber) => {
             addLog('Reconnected to server', 'success');
+            // Fetch missed logs after reconnection
+            socket.emit('get_buffered_logs');
+        });
+
+        socket.on('stats_update', (stats) => {
+            document.getElementById('testedUrls').textContent = stats.tested;
+            document.getElementById('passedUrls').textContent = stats.passed;
+            document.getElementById('failedUrls').textContent = stats.failed;
         });
 
         socket.on('log', (data) => {
