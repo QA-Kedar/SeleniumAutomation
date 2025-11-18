@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selenium Test Dashboard</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff41;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-bottom: 2px solid #00ff41;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 255, 65, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: 1px solid;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-idle {
+            background: rgba(128, 128, 128, 0.2);
+            border-color: #808080;
+            color: #808080;
+        }
+
+        .status-running {
+            background: rgba(255, 165, 0, 0.2);
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        .status-completed {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        .status-failed {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .logout-btn {
+            padding: 8px 15px;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+            border-radius: 5px;
+            color: #ff0000;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .control-panel {
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+        }
+
+        .control-panel h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: 2px solid;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+            border-color: #00ff41;
+            color: #000;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ff4136 0%, #cc0000 100%);
+            border-color: #ff0000;
+            color: #fff;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-clear {
+            background: rgba(128, 128, 128, 0.2);
+            border-color: #808080;
+            color: #808080;
+        }
+
+        .btn-clear:hover:not(:disabled) {
+            background: rgba(128, 128, 128, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00ff41;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #0f0;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .log-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff41;
+            border-radius: 10px;
+            padding: 20px;
+            height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.2);
+        }
+
+        .log-panel h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px 0;
+            z-index: 10;
+        }
+
+        .log-entry {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-left: 3px solid;
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 13px;
+            line-height: 1.5;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-info {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        .log-success {
+            border-color: #0f0;
+            color: #0f0;
+        }
+
+        .log-warning {
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        .log-error {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+
+        .log-panel::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .log-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        .log-panel::-webkit-scrollbar-thumb {
+            background: #00ff41;
+            border-radius: 5px;
+        }
+
+        .log-panel::-webkit-scrollbar-thumb:hover {
+            background: #0f0;
+        }
+
+        .blink {
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>◄ SELENIUM TEST CONTROL PANEL ►</h1>
+        <div class="header-right">
+            <div id="statusBadge" class="status-badge status-idle">● IDLE</div>
+            <a href="{{ url_for('logout') }}" class="logout-btn">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="control-panel">
+            <h2>► Control Center</h2>
+            
+            <div class="button-group">
+                <button id="startBtn" class="btn btn-start">
+                    ▶ START TESTS
+                </button>
+                <button id="stopBtn" class="btn btn-stop" disabled>
+                    ■ STOP TESTS
+                </button>
+                <button id="clearBtn" class="btn btn-clear">
+                    ✕ CLEAR LOGS
+                </button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUrls">52</div>
+                    <div class="stat-label">Total URLs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="testedUrls">0</div>
+                    <div class="stat-label">Tested</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="passedUrls">0</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="failedUrls">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="log-panel" id="logPanel">
+            <h2>► Test Logs <span class="blink">_</span></h2>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const logContent = document.getElementById('logContent');
+        const logPanel = document.getElementById('logPanel');
+        
+        let testedCount = 0;
+        let passedCount = 0;
+        let failedCount = 0;
+
+        socket.on('connect', () => {
+            addLog('Connected to server', 'success');
+        });
+
+        socket.on('log', (data) => {
+            addLog(data.message, data.type, data.timestamp);
+            
+            // Update counters based on log message
+            if (data.message.includes('✓') || data.message.includes('SUCCESS')) {
+                passedCount++;
+                document.getElementById('passedUrls').textContent = passedCount;
+            }
+            if (data.message.includes('PASSED') || data.message.includes('FAILED')) {
+                testedCount++;
+                document.getElementById('testedUrls').textContent = testedCount;
+            }
+            if (data.message.includes('FAILED') || data.message.includes('ERROR')) {
+                failedCount++;
+                document.getElementById('failedUrls').textContent = failedCount;
+            }
+        });
+
+        socket.on('test_status', (data) => {
+            updateStatus(data.status);
+        });
+
+        startBtn.addEventListener('click', () => {
+            socket.emit('start_tests');
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            testedCount = 0;
+            passedCount = 0;
+            failedCount = 0;
+            document.getElementById('testedUrls').textContent = '0';
+            document.getElementById('passedUrls').textContent = '0';
+            document.getElementById('failedUrls').textContent = '0';
+        });
+
+        stopBtn.addEventListener('click', () => {
+            socket.emit('stop_tests');
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        });
+
+        clearBtn.addEventListener('click', () => {
+            logContent.innerHTML = '';
+            addLog('Logs cleared', 'info');
+        });
+
+        function addLog(message, type = 'info', timestamp = null) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            
+            const time = timestamp || new Date().toLocaleTimeString();
+            logEntry.innerHTML = `<span class="timestamp">[${time}]</span>${message}`;
+            
+            logContent.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+
+        function updateStatus(status) {
+            statusBadge.className = 'status-badge';
+            
+            switch(status) {
+                case 'running':
+                    statusBadge.classList.add('status-running');
+                    statusBadge.textContent = '● RUNNING';
+                    break;
+                case 'completed':
+                    statusBadge.classList.add('status-completed');
+                    statusBadge.textContent = '✓ COMPLETED';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    break;
+                case 'failed':
+                    statusBadge.classList.add('status-failed');
+                    statusBadge.textContent = '✕ FAILED';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    break;
+                case 'stopped':
+                    statusBadge.classList.add('status-idle');
+                    statusBadge.textContent = '■ STOPPED';
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    break;
+                default:
+                    statusBadge.classList.add('status-idle');
+                    statusBadge.textContent = '● IDLE';
+            }
+        }
+    </script>
+</body>
+</html>
